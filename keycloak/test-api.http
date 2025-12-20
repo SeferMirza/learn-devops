@@ -1,27 +1,45 @@
 @keycloakUrl = http://localhost:8080
 @weatherServiceUrl = http://localhost:5000
 @realm = master
-@clientId = admin-cli
-@username = admin
-@password = admin
 
 ###
-
-# @name getToken
+# Get Token
+# @name login
 POST {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password&client_id={{clientId}}&username={{username}}&password={{password}}
+grant_type=client_credentials&client_id=weather-api&client_secret=weather-secret
 
 ###
 
+# Logout
+POST {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/revoke
+Content-Type: application/x-www-form-urlencoded
+
+client_id=weather-api&client_secret=weather-secret&token={{login.response.body.access_token}}
+
+###
+
+# Status
 GET {{weatherServiceUrl}}/
 
 ###
 
+# Without Token
 GET {{weatherServiceUrl}}/weather
 
 ###
 
+# With Token
 GET {{weatherServiceUrl}}/weather
-Authorization: Bearer {{getToken.response.body.access_token}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+###
+
+# OpenID Configuration
+GET {{keycloakUrl}}/realms/{{realm}}/.well-known/openid-configuration
+
+###
+
+# Public Keys for JWT
+GET {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/certs

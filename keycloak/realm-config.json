@@ -1,0 +1,33 @@
+{
+  "realm": "master",
+  "enabled": true,
+  "accessTokenLifespan": 30,
+  "ssoSessionIdleTimeout": 300,
+  "ssoSessionMaxLifespan": 600,
+  "clients": [
+    {
+      "clientId": "weather-api",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "weather-secret",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "attributes": {
+        "access.token.lifespan": "30"
+      },
+      "protocolMappers": [
+        {
+          "name": "weather-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "weather-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

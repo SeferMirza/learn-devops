@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using WeatherService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            ValidateLifetime = true
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            ValidIssuers =
+            [
+                "http://localhost:8080/realms/master",
+                "http://keycloak:8080/realms/master"
+            ]
         };
     });
 
@@ -32,10 +39,7 @@ app.MapGet("/weather", () =>
     var weather = new WeatherResponse
     {
         Temperature = random.Next(-10, 40),
-        HasRain = random.Next(100) < 30,
-        Description = random.Next(100) < 30 ? "Rainy" : "Sunny",
-        City = "İstanbul",
-        Date = DateTime.Now
+        Sky = random.Next(100) < 30 ? "Rainy" : "Sunny"
     };
     return Results.Ok(weather);
 }).RequireAuthorization();

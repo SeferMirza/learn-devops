@@ -87,6 +87,9 @@ POST /admin/realms/{realm}/logout-all
 verilebilir. Apiler {base-url}/admin/ ile başlar. Bütün api leri görmek için
 https://www.keycloak.org/docs-api/latest/rest-api/index.html adresine bakılabilir.
 
+çalışan keycloak servisine GET http://localhost:8080/realms/master/.well-known/openid-configuration isteği atılırsa
+endpointleri görebiliriz.
+
 ## Realms
 
 Keycloak'ta alanlar üzerinden yönetim yapılır. Her alan kendi kullanıcıları tutar.

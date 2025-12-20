@@ -7,7 +7,9 @@ services:
       - KEYCLOAK_ADMIN_PASSWORD=admin
     ports:
       - "8080:8080"
-    command: start-dev
+    volumes:
+      - ./realm-config.json:/opt/keycloak/data/import/realm-config.json:ro
+    command: start-dev --import-realm
 
   weather-service:
     build:
