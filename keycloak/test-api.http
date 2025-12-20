@@ -1,0 +1,27 @@
+@keycloakUrl = http://localhost:8080
+@weatherServiceUrl = http://localhost:5000
+@realm = master
+@clientId = admin-cli
+@username = admin
+@password = admin
+
+###
+
+# @name getToken
+POST {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username={{username}}&password={{password}}
+
+###
+
+GET {{weatherServiceUrl}}/
+
+###
+
+GET {{weatherServiceUrl}}/weather
+
+###
+
+GET {{weatherServiceUrl}}/weather
+Authorization: Bearer {{getToken.response.body.access_token}}

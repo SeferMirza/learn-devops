@@ -32,6 +32,13 @@ db-url-host=${MY_DB_HOST:mydb}
 > \ character functions as an escape character
 > $ characters when they appear to define an expression or are repeated
 
+bütün configler için https://www.keycloak.org/server/all-config?f=build
+
+> :Info:
+>
+> run sırasında bazı realm ayarlarına izin verilmez ama spi-admin--allowed-system-variables gibi flaglar ile
+> izin verdirilebilir.
+
 ### db
 
 db ekleme için config dosyasına db-url-host=mykeycloakdb eklenir
@@ -54,6 +61,19 @@ Production mode da başlatmak için bazı ayarlamaya ihtiyaç duyuyor. bunlar
 - HTTP is disabled as transport layer security (HTTPS) is essential
 - Hostname configuration is expected
 - HTTPS/TLS configuration is expected
+
+## Optimizations
+
+Dockerda kullanmayı planladığımız için ayağa kaldırma süresini optimize etmemiz gerekiyor.
+Bunun için Keycloak tarafından önerilen bazı optimizasyonlar var.
+
+1. Normal build yap
+2. --optimized flag ile başlat
+
+--optimized flag zaten build alındı sen önceki build i kullan demek.
+
+eğer --optimized flag ile başlatılan uygulamaya build config verilirse ve hali
+hazırda pre-build te bu verilmişse run sırasında verilen ignore edilir
 
 ## UI
 
