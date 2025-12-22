@@ -59,6 +59,7 @@
             "claim.name": "department",
             "user.attribute": "department",
             "jsonType.label": "String",
+            "multivalued": "true",
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
