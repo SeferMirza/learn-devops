@@ -102,6 +102,16 @@ endpointleri görebiliriz.
 Keycloak'ta alanlar üzerinden yönetim yapılır. Her alan kendi kullanıcıları tutar.
 Başlangıçta bir adet "master" alanı vardır. Önerilen master alanını sadece keycloak'ı yönetmek için kullanmaktır.
 
+## Token
+
+tokenda claimler eklerken Protocol Mapper kullanılıyor. Örneğin bir client için
+login olunduğunda gelen token da default olarak audience alanı olmuyor. Bunu eklemek
+için(json ile import edildiği varsayılarak) client'ın protocolMappers alanına
+
+"protocolMapper": "oidc-audience-mapper",
+
+objesi eklemek gerekiyor. realm.config.json dosyasına bakınız
+
 ## Docker
 
 docker ile kullanımda local için pek olasada prod ortamlarında iyi memory
