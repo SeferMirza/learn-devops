@@ -18,8 +18,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ClockSkew = TimeSpan.Zero,
             ValidIssuers =
             [
-                "http://localhost:8080/realms/master",
-                "http://keycloak:8080/realms/master"
+                "http://localhost:8080/realms/test-realm",
+                "http://keycloak:8080/realms/test-realm"
             ]
         };
     });

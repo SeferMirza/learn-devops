@@ -1,15 +1,40 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - keycloak-network
+
   keycloak:
-    image: quay.io/keycloak/keycloak:latest
+    build:
+      context: ./keycloak
+      dockerfile: Dockerfile
     container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB_HOST=postgres
+      - KC_DB_NAME=keycloak
+      - KC_DB_USER=keycloak
+      - KC_DB_PASSWORD=keycloak
     ports:
       - "8080:8080"
-    volumes:
-      - ./realm-config.json:/opt/keycloak/data/import/realm-config.json:ro
-    command: start-dev --import-realm
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - keycloak-network
 
   weather-service:
     build:
@@ -23,3 +48,12 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
     depends_on:
       - keycloak
+    networks:
+      - keycloak-network
+
+volumes:
+  postgres_data:
+
+networks:
+  keycloak-network:
+    driver: bridge

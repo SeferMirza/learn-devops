@@ -1,6 +1,6 @@
 @keycloakUrl = http://localhost:8080
 @weatherServiceUrl = http://localhost:5000
-@realm = master
+@realm = test-realm
 
 ###
 # Get Token
@@ -13,7 +13,7 @@ grant_type=client_credentials&client_id=weather-api&client_secret=weather-secret
 ###
 
 # Logout
-POST {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/revoke
+POST {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/logout
 Content-Type: application/x-www-form-urlencoded
 
 client_id=weather-api&client_secret=weather-secret&token={{login.response.body.access_token}}

@@ -49,6 +49,13 @@ Keycloak yapılandırmasında eksik olan belirli bir davranış veya yetenek iç
 altta yatan Quarkus çerçevesinin özelliklerini kullanabilirsiniz.
 detay için https://www.keycloak.org/server/configuration#_format_for_raw_quarkus_properties
 
+## Import realms
+
+İlk kurulumda master realm otomatik oluşturuluyor. Master realm kullanılması önerilmiyor.
+Kullanılacak realm uygulama ayağa kalktıktan sonra ui dan yada bir istekle ile oluşturulabilir.
+Alternatif olarak önceden hazırlanmış realm json dosyası import edilebilir. json dosyasını
+import etmek için image da /opt/keycloak/data/import/ altına json dosyası olarak kopyalamak yeterlidir.
+
 ## Modes
 
 Keycloak development ve production modlarında çalışabilir. Default modu development modudur.

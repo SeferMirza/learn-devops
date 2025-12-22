@@ -1,5 +1,5 @@
 {
-  "realm": "master",
+  "realm": "test-realm",
   "enabled": true,
   "accessTokenLifespan": 30,
   "ssoSessionIdleTimeout": 300,
