@@ -87,9 +87,6 @@
       "firstName": "Admin",
       "lastName": "User",
       "email": "admin@example.com",
-      "attributes": {
-        "department": ["management"]
-      },
       "credentials": [
         {
           "type": "password",
@@ -106,9 +103,6 @@
       "firstName": "Test",
       "lastName": "User",
       "email": "testuser@example.com",
-      "attributes": {
-        "department": ["engineering"]
-      },
       "credentials": [
         {
           "type": "password",

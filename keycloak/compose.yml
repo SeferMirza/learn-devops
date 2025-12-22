@@ -26,9 +26,6 @@ services:
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_DB_HOST=postgres
-      - KC_DB_NAME=keycloak
-      - KC_DB_USER=keycloak
       - KC_DB_PASSWORD=keycloak
     ports:
       - "8080:8080"
