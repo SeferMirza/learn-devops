@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Keycloak Flow Demo</title>
+</head>
+<body>
+  <h1>Weather</h1>
+  <button onclick="loadWeather()">Load Weather</button>
+  <pre id="output"></pre>
+
+  <script>
+    async function loadWeather() {
+      const token = localStorage.getItem("access_token");
+
+      if (token) {
+        redirectToLogin();
+        return;
+      }
+
+      const baseUrl = "http://localhost:5000";
+      const res = await fetch(`${baseUrl}/weather`, {
+        headers: { Authorization: "Bearer " + token, 'Content-Type': 'application/json' }
+      });
+
+      if (res.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      document.getElementById("output").textContent =
+        JSON.stringify(await res.json(), null, 2);
+    }
+
+    function redirectToLogin() {
+      const redirectUri = encodeURIComponent(window.location.origin);
+      window.location.href =
+        "http://localhost:8080/realms/test-realm/protocol/openid-connect/auth" +
+        "?client_id=weather-api" +
+        "&response_type=code" +
+        "&scope=openid" +
+        "&redirect_uri=" + redirectUri;
+    }
+  </script>
+</body>
+</html>

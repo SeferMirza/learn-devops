@@ -1,6 +1,6 @@
 @keycloakUrl = http://localhost:8080
 @weatherServiceUrl = http://localhost:5000
-@realm = test-realm
+@realm = test-realm2
 @username = testuser
 @password = testpass
 
