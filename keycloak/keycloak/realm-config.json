@@ -20,7 +20,6 @@
     {
       "clientId": "weather-api",
       "redirectUris": ["http://localhost/*"],
-      "webOrigins": ["http://localhost"],
       "enabled": true,
       "publicClient": true,
       "directAccessGrantsEnabled": true,
