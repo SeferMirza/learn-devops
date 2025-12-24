@@ -17,7 +17,6 @@ We use the config file approach. Options follow the format
 - Default config path: `conf/keycloak.conf`
 - Environment placeholders: `${ENV_VAR}` with optional fallback
   `${ENV_VAR:default}`
-- Escaping: `\` escapes characters; `$` is special in expressions
 
 All available options: [All Configs]
 
@@ -113,7 +112,7 @@ Query parameters:
   already logged in, an error is returned instead of showing the login page.
   This is useful for checking session status or implementing silent SSO.
 
-Example request:
+Request:
 ```url
 http://localhost:8080/realms/test-realm/protocol/openid-connect/auth
   ?client_id=weather-api
@@ -122,8 +121,6 @@ http://localhost:8080/realms/test-realm/protocol/openid-connect/auth
   &redirect_uri=http://localhost
   &prompt=none
 ```
-
-
 
 After successful login, Keycloak redirects to:
 ```
@@ -139,15 +136,6 @@ client_id=weather-api
 &grant_type=authorization_code
 &code=AUTH_CODE
 &redirect_uri=http://localhost
-```
-
-Sample response:
-```
-{
-  "access_token": "...",
-  "refresh_token": "...",
-  ...
-}
 ```
 
 #### Redirect URI Settings
