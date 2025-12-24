@@ -15,135 +15,135 @@
   <pre id="output">Click "Load Weather" to start</pre>
 
   <script>
-    const keycloakUrl = 'http://localhost:8080/realms/test-realm';
-    const client = 'weather-api';
-    const rUrl = window.location.origin;
-    const backendUrl = 'http://localhost:5000';
+  const keycloakUrl = 'http://localhost:8080/realms/test-realm';
+  const client = 'weather-api';
+  const rUrl = window.location.origin;
+  const backendUrl = 'http://localhost:5000';
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const error = params.get('error');
+  window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const error = params.get('error');
 
-      if (error === 'login_required' || error === 'interaction_required') {
-        redirectToLogin(false);
-        return;
+    if (error === 'login_required' || error === 'interaction_required') {
+      redirectToLogin(false);
+      return;
+    }
+
+    if (code) {
+      await exchangeCodeForToken(code);
+    }
+  });
+
+  async function exchangeCodeForToken(code) {
+    try {
+      const tokenRes = await fetch(`${keycloakUrl}/protocol/openid-connect/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          client_id: client,
+          redirect_uri: rUrl
+        })
+      });
+
+      const tokenData = await tokenRes.json();
+
+      if (tokenData.access_token) {
+        localStorage.setItem('access_token', tokenData.access_token);
+        localStorage.setItem('refresh_token', tokenData.refresh_token);
+
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        await loadWeather();
+      } else {
+        document.getElementById('output').textContent = 'Token alınamadı: ' + JSON.stringify(tokenData, null, 2);
       }
+    } catch (err) {
+      document.getElementById('output').textContent = 'Token alma hatası: ' + err.message;
+    }
+  }
 
-      if (code) {
-        await exchangeCodeForToken(code);
+  async function refreshAccessToken() {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) { return false; }
+
+    try {
+      const res = await fetch(`${keycloakUrl}/protocol/openid-connect/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+          client_id: client
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.access_token) {
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+        return true;
       }
-    });
+    } catch (err) {
+      console.log('Refresh hatası:', err);
+    }
 
-    async function exchangeCodeForToken(code) {
-      try {
-        const tokenRes = await fetch(`${keycloakUrl}/protocol/openid-connect/token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'authorization_code',
-            code,
-            client_id: client,
-            redirect_uri: rUrl
-          })
-        });
+    return false;
+  }
 
-        const tokenData = await tokenRes.json();
+  async function loadWeather() {
+    const token = localStorage.getItem('access_token');
 
-        if (tokenData.access_token) {
-          localStorage.setItem('access_token', tokenData.access_token);
-          localStorage.setItem('refresh_token', tokenData.refresh_token);
+    if (!token) {
+      redirectToLogin(true);
+      return;
+    }
 
-          window.history.replaceState({}, document.title, window.location.pathname);
+    try {
+      const res = await fetch(`${backendUrl}/weather`, {
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
 
+      if (res.status === 401) {
+        const refreshed = await refreshAccessToken();
+
+        if (refreshed) {
           await loadWeather();
-        } else {
-          document.getElementById('output').textContent = 'Token alınamadı: ' + JSON.stringify(tokenData, null, 2);
+          return;
         }
-      } catch (err) {
-        document.getElementById('output').textContent = 'Token alma hatası: ' + err.message;
-      }
-    }
 
-    async function refreshAccessToken() {
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) { return false; }
-
-      try {
-        const res = await fetch(`${keycloakUrl}/protocol/openid-connect/token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'refresh_token',
-            refresh_token: refreshToken,
-            client_id: client
-          })
-        });
-
-        const data = await res.json();
-
-        if (data.access_token) {
-          localStorage.setItem('access_token', data.access_token);
-          localStorage.setItem('refresh_token', data.refresh_token);
-          return true;
-        }
-      } catch (err) {
-        console.log('Refresh hatası:', err);
-      }
-
-      return false;
-    }
-
-    async function loadWeather() {
-      const token = localStorage.getItem('access_token');
-
-      if (!token) {
         redirectToLogin(true);
         return;
       }
 
-      try {
-        const res = await fetch(`${backendUrl}/weather`, {
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-          }
-        });
+      const data = await res.json();
+      document.getElementById('output').textContent = `Temperature: ${data.temperature}°C\nSky: ${data.sky}`;
 
-        if (res.status === 401) {
-          const refreshed = await refreshAccessToken();
+    } catch (err) {
+      document.getElementById('output').textContent = 'Error: ' + err.message;
+    }
+  }
 
-          if (refreshed) {
-            await loadWeather();
-            return;
-          }
+  function redirectToLogin(silent = false) {
+    const redirectUri = encodeURIComponent(rUrl);
+    let authUrl = `${keycloakUrl}/protocol/openid-connect/auth` +
+      `?client_id=${client}` +
+      `&response_type=code` +
+      `&scope=openid` +
+      `&redirect_uri=${redirectUri}`;
 
-          redirectToLogin(true);
-          return;
-        }
-
-        const data = await res.json();
-        document.getElementById('output').textContent = `Temperature: ${data.temperature}°C\nSky: ${data.sky}`;
-
-      } catch (err) {
-        document.getElementById('output').textContent = 'Error: ' + err.message;
-      }
+    if (silent) {
+      authUrl += '&prompt=none';
     }
 
-    function redirectToLogin(silent = false) {
-      const redirectUri = encodeURIComponent(rUrl);
-      let authUrl = `${keycloakUrl}/protocol/openid-connect/auth` +
-        `?client_id=${client}` +
-        `&response_type=code` +
-        `&scope=openid` +
-        `&redirect_uri=${redirectUri}`;
-
-      if (silent) {
-        authUrl += '&prompt=none';
-      }
-
-      window.location.href = authUrl;
-    }
+    window.location.href = authUrl;
+  }
   </script>
 </body>
 </html>
