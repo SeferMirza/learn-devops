@@ -94,6 +94,79 @@ Use Protocol Mappers to add claims to tokens. For example, adding an audience
 claim uses the `oidc-audience-mapper`. See `keycloak/realm-config.json` in this
 repo for basic examples.
 
+## Login and Redirect
+
+To start the login flow, send a GET request to:
+
+```
+GET http://localhost:8080/realms/<realm-name>/protocol/openid-connect/auth
+```
+
+Query parameters:
+- `client_id`: The client ID (e.g. weather-api)
+- `response_type`: `code` (for Authorization Code Flow)
+- `scope`: `openid` (and any additional scopes)
+- `redirect_uri`: Where the user will be redirected after login
+  (e.g. http://localhost)
+- `prompt`: (optional) Controls whether the login screen is shown. Use
+  `prompt=none` to attempt silent authentication (no UI); if the user is not
+  already logged in, an error is returned instead of showing the login page.
+  This is useful for checking session status or implementing silent SSO.
+
+Example request:
+```url
+http://localhost:8080/realms/test-realm/protocol/openid-connect/auth
+  ?client_id=weather-api
+  &response_type=code
+  &scope=openid
+  &redirect_uri=http://localhost
+  &prompt=none
+```
+
+
+
+After successful login, Keycloak redirects to:
+```
+http://localhost/?code=AUTH_CODE&session_state=...&iss=...
+```
+
+To exchange the `code` for an access token, send a POST request to:
+```
+POST http://localhost:8080/realms/<realm-name>/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=weather-api
+&grant_type=authorization_code
+&code=AUTH_CODE
+&redirect_uri=http://localhost
+```
+
+Sample response:
+```
+{
+  "access_token": "...",
+  "refresh_token": "...",
+  ...
+}
+```
+
+#### Redirect URI Settings
+
+For the redirect to work, the client must have:
+- `redirectUris`: Allowed redirect URIs (e.g. ["http://localhost/*"])
+- `webOrigins`: Allowed CORS origins (e.g. ["http://localhost"])
+- `standardFlowEnabled`: true (required for Authorization Code Flow)
+
+> [Info]
+>
+> If you want to obtain tokens directly from a frontend (SPA/JS) app, set
+> `publicClient: true` and do not send `client_secret` in the token request. For
+> confidential clients (`publicClient: false`), using the secret in the frontend
+> is insecure and required by Keycloak.
+
+These settings must be present in both JSON imports and in the Keycloak UI
+client configuration.
+
 ## Docker
 
 For production, size memory appropriately. Guidance: [Sizing Guide]

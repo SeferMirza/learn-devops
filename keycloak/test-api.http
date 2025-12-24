@@ -1,6 +1,6 @@
 @keycloakUrl = http://localhost:8080
 @weatherServiceUrl = http://localhost:5000
-@realm = test-realm2
+@realm = test-realm
 @username = testuser
 @password = testpass
 
@@ -57,7 +57,7 @@ Authorization: Bearer {{adminToken.response.body.access_token}}
 POST {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password&client_id=weather-api&client_secret=weather-secret&username={{username}}&password={{password}}
+grant_type=password&client_id=weather-api&username={{username}}&password={{password}}
 
 ###
 
@@ -65,7 +65,7 @@ grant_type=password&client_id=weather-api&client_secret=weather-secret&username=
 POST {{keycloakUrl}}/realms/{{realm}}/protocol/openid-connect/logout
 Content-Type: application/x-www-form-urlencoded
 
-client_id=weather-api&client_secret=weather-secret&refresh_token={{login.response.body.refresh_token}}
+client_id=weather-api&refresh_token={{login.response.body.refresh_token}}
 
 ###
 

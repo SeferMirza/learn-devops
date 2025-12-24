@@ -19,12 +19,13 @@
   "clients": [
     {
       "clientId": "weather-api",
+      "redirectUris": ["http://localhost/*"],
+      "webOrigins": ["http://localhost"],
       "enabled": true,
-      "publicClient": false,
-      "secret": "weather-secret",
+      "publicClient": true,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
-      "standardFlowEnabled": false,
+      "standardFlowEnabled": true,
       "attributes": {
         "access.token.lifespan": "30"
       },
