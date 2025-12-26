@@ -1,97 +1,107 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Keycloak Flow Demo</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #output { background: #f4f4f4; padding: 10px; border-radius: 5px; }
-    button { padding: 10px 20px; cursor: pointer; }
-  </style>
-</head>
-<body>
-  <h1>Weather App</h1>
-  <button onclick="loadWeather()">Load Weather</button>
-  <pre id="output">Click "Load Weather" to start</pre>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Keycloak Flow Demo</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      #output { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+      button { padding: 10px 20px; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Weather App</h1>
+    <button onclick="getWeatherInfo()">Load Weather</button>
+    <pre id="output">Click "Load Weather" to start</pre>
 
-  <script>
-    const keycloakUrl = 'http://localhost:8080/realms/test-realm';
-    const clientId = 'weather-api';
-    const backendUrl = 'http://localhost:5000';
-    const redirectUri = window.location.origin;
+    <script>
+      const keycloakUrl = 'http://localhost:8080/realms/test-realm';
+      const clientId = 'weather-api';
+      const backendUrl = 'http://localhost:5000';
+      const redirectUri = window.location.origin;
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
+      // post-redirect actions
+      window.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
 
-      // Remove code from URL
-      if (code) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        await loginByCode(code);
-      }
-    });
-
-    async function loginByCode(code) {
-      try {
-        const res = await fetch(`${backendUrl}/login-by-code`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, redirectUri })
-        });
-
-        if (!res.ok) {
-          throw new Error("login failed");
+        if (code) {
+          /*
+          * When redirected from Keycloak, the auth code is included in the query.
+          * In this case, it would be sensible to clean the query for security and
+          * usability reasons.
+          */
+          window.history.replaceState({}, document.title, window.location.pathname);
+          await loginByCode(code);
         }
+      });
 
-        const data = await res.json();
+      async function loginByCode(code) {
+        try {
+          /*
+          * The reason for providing the redirectUri in the body: The redirectUri
+          * information is required when sending a token request. If it does not
+          * match the redirectUri information when the code is received, it is not
+          * provided.
+          */
+          const result = await fetch(`${backendUrl}/login-by-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, redirectUri })
+          });
 
-        localStorage.setItem('accessToken', data.accessToken);
-
-        await loadWeather();
-      } catch (err) {
-        document.getElementById('output').textContent =
-          'Login error: ' + err.message;
-      }
-    }
-
-    async function loadWeather() {
-      const accessToken = localStorage.getItem('accessToken');
-      if (!accessToken) {
-        redirectToLogin();
-        return;
-      }
-
-      try {
-        const res = await fetch(`${backendUrl}/weather`, {
-          headers: {
-            Authorization: 'Bearer ' + accessToken
+          if (!result.ok) {
+            throw new Error("login failed");
           }
-        });
 
-        if (res.status === 401) {
+          const data = await result.json();
+
+          localStorage.setItem('accessToken', data.accessToken);
+
+          await getWeatherInfo();
+        } catch (err) {
+          document.getElementById('output').textContent =
+            'Login error: ' + err.message;
+        }
+      }
+
+      async function getWeatherInfo() {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
           redirectToLogin();
           return;
         }
 
-        const data = await res.json();
-        document.getElementById('output').textContent =
-          `Temperature: ${data.temperature}°C\nSky: ${data.sky}`;
-      } catch (err) {
-        document.getElementById('output').textContent =
-          'Weather error: ' + err.message;
+        try {
+          const result = await fetch(`${backendUrl}/weather`, {
+            headers: {
+              Authorization: 'Bearer ' + accessToken
+            }
+          });
+
+          if (result.status === 401) {
+            redirectToLogin();
+            return;
+          }
+
+          const data = await result.json();
+          document.getElementById('output').textContent = `Temperature: ${data.temperature}°C\nSky: ${data.sky}`;
+        } catch (err) {
+          document.getElementById('output').textContent = 'Weather error: ' + err.message;
+        }
       }
-    }
 
-    function redirectToLogin() {
-      const authUrl =
-        `${keycloakUrl}/protocol/openid-connect/auth` +
-        `?client_id=${clientId}` +
-        `&response_type=code` +
-        `&scope=openid` +
-        `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      function redirectToLogin() {
+        // This query parameters are required
+        let authUrl =
+          `${keycloakUrl}/protocol/openid-connect/auth` +
+          `?client_id=${clientId}` +
+          `&response_type=code` +
+          `&scope=openid` +
+          `&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
-      window.location.href = authUrl;
-    }
-  </script>
-</body>
+        window.location.href = authUrl;
+      }
+    </script>
+  </body>
 </html>
