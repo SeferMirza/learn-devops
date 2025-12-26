@@ -4,10 +4,9 @@ namespace WeatherService;
 
 public class KeycloakClient(IConfiguration _configuration, HttpClient _httpClient)
 {
-    private readonly HttpClient _httpClient = _httpClient;
-    private readonly string _tokenEndpoint = _configuration.GetRequiredValue("Keycloak:TokenEndpoint");
-    private readonly string _clientId = _configuration.GetRequiredValue("Keycloak:ClientId");
-    private readonly string _clientSecret = _configuration.GetRequiredValue("Keycloak:ClientSecret");
+    readonly string _tokenEndpoint = _configuration.GetRequiredValue("Keycloak:TokenEndpoint");
+    readonly string _clientId = _configuration.GetRequiredValue("Keycloak:ClientId");
+    readonly string _clientSecret = _configuration.GetRequiredValue("Keycloak:ClientSecret");
 
     public async Task<string?> GetTokenByCodeAsync(string code, string redirectUri)
     {

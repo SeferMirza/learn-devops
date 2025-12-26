@@ -9,6 +9,7 @@ public static class Extensions
         {
             throw new InvalidOperationException($"Configuration key '{key}' is missing or empty.");
         }
+
         return value;
     }
 }

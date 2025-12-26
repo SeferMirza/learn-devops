@@ -1,7 +1,3 @@
 namespace WeatherService;
 
-public record WeatherResponse
-{
-    public int Temperature { get; init; }
-    public string? Sky { get; init; }
-}
+public record WeatherResponse(int Temperature, string Sky);

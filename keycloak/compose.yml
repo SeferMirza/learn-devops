@@ -60,7 +60,6 @@ services:
       - ./Ui/index.html:/usr/share/nginx/index.html:ro
     depends_on:
       - weather-service
-      - keycloak
     networks:
       - keycloak-network
 

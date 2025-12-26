@@ -23,10 +23,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuers = [
-                "http://localhost:80",
-                "http://localhost",
-            ],
+            ValidIssuers = ["http://localhost"],
             ValidateAudience = true,
             ValidAudience = builder.Configuration["Authentication:Jwt:Audience"],
             ValidateIssuerSigningKey = true,
@@ -35,7 +32,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     builder.Configuration["Authentication:Jwt:Key"]!
                 )
             ),
-
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
@@ -56,11 +52,10 @@ app.UseAuthorization();
 app.MapGet("/weather", () =>
 {
     var random = new Random();
-    var weather = new WeatherResponse
-    {
-        Temperature = random.Next(-10, 40),
-        Sky = random.Next(100) < 30 ? "Rainy" : "Sunny"
-    };
+    var weather = new WeatherResponse(
+        Temperature: random.Next(-10, 40),
+        Sky: random.Next(100) < 30 ? "Rainy" : "Sunny"
+    );
 
     return Results.Ok(weather);
 }).RequireAuthorization();
@@ -78,6 +73,7 @@ app.MapPost("/login-by-code", async ([FromServices] JwtTokenBuilder tokenBuilder
     }
 
     string token = tokenBuilder.Build(claims);
+
     return Results.Ok(new LoginResponse(AccessToken: token));
 }).AllowAnonymous();
 

@@ -7,19 +7,18 @@ namespace WeatherService;
 
 public class JwtTokenBuilder(IConfiguration _configuration)
 {
-    readonly int _defaultExpiresInMinutes = 20;
-
-    string Key => _configuration.GetRequiredValue($"Authentication:Jwt:{nameof(Key)}");
-    string Issuer => _configuration.GetRequiredValue($"Authentication:Jwt:{nameof(Issuer)}");
-    string Audience => _configuration.GetRequiredValue($"Authentication:Jwt:{nameof(Audience)}");
+    readonly int _defaultExpiresInMinutes = int.Parse(_configuration.GetRequiredValue("Authentication:Jwt:ExpiresInMinutes"));
+    readonly string _key = _configuration.GetRequiredValue($"Authentication:Jwt:Key");
+    readonly string _issuer = _configuration.GetRequiredValue($"Authentication:Jwt:Issuer");
+    readonly string _audience = _configuration.GetRequiredValue($"Authentication:Jwt:Audience");
 
     public string Build(List<Claim> claims)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Key));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
-            issuer: Issuer,
-            audience: Audience,
+            issuer: _issuer,
+            audience: _audience,
             claims: claims,
             notBefore: DateTime.UtcNow,
             expires: DateTime.UtcNow.AddMinutes(_defaultExpiresInMinutes),
