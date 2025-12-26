@@ -1,8 +1,23 @@
 # Keycloak
 
-This documentation covers using Keycloak with Docker in this repo.
+This documentation covers using Keycloak with Docker in this repository.
 
-## Configuration
+At the core of Keycloak, there are realms that represent systems at the root
+level. Under these realms, there are clients, users, and integrations.
+
+The scenario here is that the user login to the system via keycloak and get an
+`auth code` then get a token from our service to gain access to the service.
+
+## Setup
+
+Since it is part of a system, it is removed in the same compose file as the
+project. Since it can have its own config file, Keycloak has its own folder, and
+within this folder, there is a Dockerfile and a config file.
+
+Keycloak also needs a database to work. It would be best if this database had
+its own separate database or schema.
+
+### Configuration
 
 Keycloak can be configured in four ways:
 
@@ -23,7 +38,7 @@ All available options: [All Configs]
 Note: Some realm settings are restricted at runtime; enabling flags (e.g.,
 `spi-admin-allowed-system-variables`) should be used cautiously.
 
-### Database
+#### Database
 
 You can configure the database via the config file, environment variables, or
 CLI flags. Precedence: CLI > environment > config file.
@@ -34,17 +49,20 @@ Using `keycloak.conf`:
 db-url-host=mykeycloakdb
 ```
 
-### Quarkus framework
+#### Quarkus framework
 
 For gaps in Keycloak options, you can fall back to raw Quarkus properties:
 [Quarkus Properties]
 
-## Import realms
+### One time import realms
 
 Keycloak creates a `master` realm by default; avoid using it for applications.
 You can create realms via the UI or Admin API, or import a prebuilt JSON by
 copying it into the image under `/opt/keycloak/data/import/` and starting with
 realm import enabled.
+
+This import works only if the realms not exist. It cannot be used for data
+updates.
 
 ## Modes
 
@@ -74,90 +92,57 @@ precedence.
 Access the Admin Console at `{base-url}/admin` to manage realms, users, and
 settings.
 
-## API
-
-Manage Keycloak via the Admin REST API under `{base-url}/admin`.
-Example: `POST /admin/realms/{realm}/logout-all`
-API reference: [API Reference]
-
-OpenID Connect discovery: [OIDC Discovery]
-
 ## Realms
 
 Realms isolate users and configuration. The `master` realm exists by default and
 should be used only for administering Keycloak.
 
-## Token
+## Login Flows
 
-Use Protocol Mappers to add claims to tokens. For example, adding an audience
-claim uses the `oidc-audience-mapper`. See `keycloak/realm-config.json` in this
-repo for basic examples.
+The user's authentication screen will be explained below.
 
-## Login and Redirect
-
-To start the login flow, send a GET request to:
-
-```
-GET http://localhost:8080/realms/<realm-name>/protocol/openid-connect/auth
-```
+The user is redirected to
+`http://keycloak/realms/<realm-name>/protocol/openid-connect/auth` to log in.
+This process requires the query parameters provided below with their
+descriptions.
 
 Query parameters:
 - `client_id`: The client ID (e.g. weather-api)
 - `response_type`: `code` (for Authorization Code Flow)
 - `scope`: `openid` (and any additional scopes)
 - `redirect_uri`: Where the user will be redirected after login
-  (e.g. http://localhost)
-- `prompt`: (optional) Controls whether the login screen is shown. Use
-  `prompt=none` to attempt silent authentication (no UI); if the user is not
-  already logged in, an error is returned instead of showing the login page.
-  This is useful for checking session status or implementing silent SSO.
 
-Request:
-```url
-http://localhost:8080/realms/test-realm/protocol/openid-connect/auth
-  ?client_id=weather-api
-  &response_type=code
-  &scope=openid
-  &redirect_uri=http://localhost
-  &prompt=none
-```
+After the user login, they are redirected to the `redirect_uri` URL we provided.
+Keycloak sends the state and auth code information in the query during this
+redirection process.
 
-After successful login, Keycloak redirects to:
-```
-http://localhost/?code=AUTH_CODE&session_state=...&iss=...
-```
+After the Keycloak login process, it could have redirected directly to the token
+instead of the auth code. However, since it sends this token in the query, it is
+not secure. Obtaining a one-time code would be the most logical approach.
 
-To exchange the `code` for an access token, send a POST request to:
+After the code is obtained, a token will be required for other operations. To
+obtain this token, we send a request to
+`http://keycloak/realms/<realm-name>/protocol/openid-connect/token`. The
+required body parameters for this request are listed below.
+
 ```
-POST http://localhost:8080/realms/<realm-name>/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
 client_id=weather-api
-&grant_type=authorization_code
-&code=AUTH_CODE
-&redirect_uri=http://localhost
+grant_type=authorizationCode
+code=authCode
+client_secret=clientSecret
+redirect_uri=redirectUri
 ```
 
-#### Redirect URI Settings
+The important thing here is that the parameters used when obtaining the code
+must be the same as those used when obtaining the token. For example,
+`redirect_uri`
 
-For the redirect to work, the client must have:
-- `redirectUris`: Allowed redirect URIs (e.g. ["http://localhost/*"])
-- `webOrigins`: Allowed CORS origins (e.g. ["http://localhost"])
-- `standardFlowEnabled`: true (required for Authorization Code Flow)
-
-> [Info]
->
-> If you want to obtain tokens directly from a frontend (SPA/JS) app, set
-> `publicClient: true` and do not send `client_secret` in the token request. For
-> confidential clients (`publicClient: false`), using the secret in the frontend
-> is insecure and required by Keycloak.
-
-These settings must be present in both JSON imports and in the Keycloak UI
-client configuration.
-
-## Docker
-
-For production, size memory appropriately. Guidance: [Sizing Guide]
+Since we use our own tokens in our projects, we pull the code received by the
+user into our service and go to Keycloak with the service to obtain a token. We
+retrieve the user information within this token, assign it to our own claims,
+and create our own token.
 
 ## References
 
@@ -166,4 +151,3 @@ For production, size memory appropriately. Guidance: [Sizing Guide]
 [Dev Mode]: https://www.keycloak.org/server/configuration#_starting_keycloak_in_development_mode
 [API Reference]: https://www.keycloak.org/docs-api/latest/rest-api/index.html
 [OIDC Discovery]: http://localhost:8080/realms/master/.well-known/openid-configuration
-[Sizing Guide]: https://www.keycloak.org/high-availability/single-cluster/concepts-memory-and-cpu-sizing#single-cluster-single-site-calculation
