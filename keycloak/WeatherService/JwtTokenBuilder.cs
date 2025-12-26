@@ -5,31 +5,27 @@ using System.Text;
 
 namespace WeatherService;
 
-public class JwtTokenBuilder(IConfiguration _configuration, TimeProvider _timeProvider)
+public class JwtTokenBuilder(IConfiguration _configuration)
 {
     readonly int _defaultExpiresInMinutes = 20;
 
-    string Key => _configuration.GetValue($"Authentication:Jwt:{nameof(Key)}", "7F9aP2LkQxM4WJtE8RZsD0HnYcB5U3Vv");
-    string? Issuer => _configuration.GetValue<string>($"Authentication:Jwt:{nameof(Issuer)}");
-    string? Audience => _configuration.GetValue<string>($"Authentication:Jwt:{nameof(Audience)}");
+    string Key => _configuration.GetRequiredValue($"Authentication:Jwt:{nameof(Key)}");
+    string Issuer => _configuration.GetRequiredValue($"Authentication:Jwt:{nameof(Issuer)}");
+    string Audience => _configuration.GetRequiredValue($"Authentication:Jwt:{nameof(Audience)}");
 
     public string Build(List<Claim> claims)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Key));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        Console.WriteLine($"Building JWT for Issuer: {Issuer}, Audience: {Audience}");
-
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
             issuer: Issuer,
             audience: Audience,
             claims: claims,
             notBefore: DateTime.UtcNow,
             expires: DateTime.UtcNow.AddMinutes(_defaultExpiresInMinutes),
-            signingCredentials: creds
+            signingCredentials: credentials
         );
-        var res = new JwtSecurityTokenHandler().WriteToken(token);
-        Console.WriteLine($"ress {res}");
-        return res;
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
