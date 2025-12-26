@@ -5,18 +5,19 @@ namespace WeatherService;
 public class KeycloakClient(IConfiguration _configuration, HttpClient _httpClient)
 {
     private readonly HttpClient _httpClient = _httpClient;
-    private readonly string _tokenEndpoint = "http://localhost:8080/realms/test-realm/protocol/openid-connect/token";
+    private readonly string _tokenEndpoint = "http://keycloak:8080/realms/test-realm/protocol/openid-connect/token";
     private readonly string _clientId = "weather-api";
     private readonly string _clientSecret = _configuration["Keycloak:ClientSecret"] ?? "clientSecret";
 
-    public async Task<string?> GetTokenByCodeAsync(string code)
+    public async Task<string?> GetTokenByCodeAsync(string code, string redirectUri)
     {
         var parameters = new Dictionary<string, string>
         {
             { "grant_type", "authorization_code" },
             { "code", code },
             { "client_id", _clientId },
-            { "client_secret", _clientSecret }
+            { "client_secret", _clientSecret },
+            { "redirect_uri", redirectUri }
         };
 
         var content = new FormUrlEncodedContent(parameters);
@@ -29,4 +30,3 @@ public class KeycloakClient(IConfiguration _configuration, HttpClient _httpClien
         return accessToken;
     }
 }
-

@@ -9,7 +9,7 @@ public class JwtTokenBuilder(IConfiguration _configuration, TimeProvider _timePr
 {
     readonly int _defaultExpiresInMinutes = 20;
 
-    string Key => _configuration.GetValue($"Authentication:Jwt:{nameof(Key)}", "WeatherService");
+    string Key => _configuration.GetValue($"Authentication:Jwt:{nameof(Key)}", "7F9aP2LkQxM4WJtE8RZsD0HnYcB5U3Vv");
     string? Issuer => _configuration.GetValue<string>($"Authentication:Jwt:{nameof(Issuer)}");
     string? Audience => _configuration.GetValue<string>($"Authentication:Jwt:{nameof(Audience)}");
 
@@ -18,16 +18,18 @@ public class JwtTokenBuilder(IConfiguration _configuration, TimeProvider _timePr
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var header = new JwtHeader(creds);
-        var payload = new JwtPayload(
+        Console.WriteLine($"Building JWT for Issuer: {Issuer}, Audience: {Audience}");
+
+        var token = new JwtSecurityToken(
             issuer: Issuer,
             audience: Audience,
             claims: claims,
-            notBefore: null,
-            issuedAt: _timeProvider.GetUtcNow().DateTime,
-            expires: _timeProvider.GetUtcNow().AddMinutes(_defaultExpiresInMinutes).DateTime
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddMinutes(_defaultExpiresInMinutes),
+            signingCredentials: creds
         );
-
-        return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(header, payload));
+        var res = new JwtSecurityTokenHandler().WriteToken(token);
+        Console.WriteLine($"ress {res}");
+        return res;
     }
 }

@@ -36,7 +36,7 @@
         const res = await fetch(`${backendUrl}/login-by-code`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: `"${code}"`
+          body: JSON.stringify({ code, redirectUri })
         });
 
         if (!res.ok) {
@@ -45,7 +45,7 @@
 
         const data = await res.json();
 
-        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('accessToken', data.accessToken);
 
         await loadWeather();
       } catch (err) {
@@ -55,9 +55,8 @@
     }
 
     async function loadWeather() {
-      const token = localStorage.getItem('access_token');
-
-      if (!token) {
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
         redirectToLogin();
         return;
       }
@@ -65,7 +64,7 @@
       try {
         const res = await fetch(`${backendUrl}/weather`, {
           headers: {
-            Authorization: 'Bearer ' + token
+            Authorization: 'Bearer ' + accessToken
           }
         });
 

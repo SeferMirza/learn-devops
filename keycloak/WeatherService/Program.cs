@@ -1,6 +1,8 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 using WeatherService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,8 +18,41 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuers = [
+                "http://localhost:80",
+                "http://localhost",
+            ],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Authentication:Jwt:Audience"],
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(
+                    builder.Configuration["Authentication:Jwt:Key"]!
+                )
+            ),
 
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = ctx =>
+            {
+                Console.WriteLine("Auth failed: " + ctx.Exception);
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = ctx =>
+            {
+                Console.WriteLine("Token validated successfully");
+                return Task.CompletedTask;
+            }
+        };
+    });
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<JwtTokenBuilder>();
@@ -42,13 +77,12 @@ app.MapGet("/weather", () =>
 
     return Results.Ok(weather);
 }).RequireAuthorization();
-
-app.MapPost("/login-by-code", async ([FromServices] JwtTokenBuilder tokenBuilder, [FromServices] KeycloakClient keycloakClient, [FromBody] string code) =>
+app.MapPost("/login-by-code", async ([FromServices] JwtTokenBuilder tokenBuilder, [FromServices] KeycloakClient keycloakClient, [FromBody] LoginRequestBody body) =>
 {
-    var accessToken = await keycloakClient.GetTokenByCodeAsync(code);
+    var accessToken = await keycloakClient.GetTokenByCodeAsync(body.Code, body.RedirectUri);
     var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
     var jwt = handler.ReadJwtToken(accessToken);
-    var username = jwt.Claims.FirstOrDefault(c => c.Type == "username")?.Value;
+    var username = jwt.Claims.FirstOrDefault(c => c.Type == "username" || c.Type == "preferred_username")?.Value;
 
     List<Claim> claims = [];
     if (!string.IsNullOrEmpty(username))
@@ -57,7 +91,7 @@ app.MapPost("/login-by-code", async ([FromServices] JwtTokenBuilder tokenBuilder
     }
 
     string token = tokenBuilder.Build(claims);
-    return Results.Ok(new LoginResponse(token));
+    return Results.Ok(new LoginResponse(AccessToken: token));
 }).AllowAnonymous();
 
 app.Run();
