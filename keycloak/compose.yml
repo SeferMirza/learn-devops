@@ -15,14 +15,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - keycloak-network
 
   keycloak:
     build:
-      context: ./keycloak
+      context: ./Keycloak
       dockerfile: Dockerfile
-    container_name: keycloak
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
@@ -32,14 +29,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - keycloak-network
 
   weather-service:
     build:
       context: ./WeatherService
       dockerfile: Dockerfile
-    container_name: weather-service
     ports:
       - "5000:8000"
     environment:
@@ -48,8 +42,6 @@ services:
       - ASPNETCORE_URLS=http://+:8000
     depends_on:
       - keycloak
-    networks:
-      - keycloak-network
 
   nginx:
     image: nginx:alpine
@@ -60,8 +52,6 @@ services:
       - ./Ui/index.html:/usr/share/nginx/index.html:ro
     depends_on:
       - weather-service
-    networks:
-      - keycloak-network
 
 volumes:
   postgres_data:

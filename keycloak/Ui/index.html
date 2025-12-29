@@ -83,9 +83,9 @@
             redirectToLogin();
             return;
           }
-
+          const username = JSON.parse(atob(accessToken.split('.')[1])).username;
           const data = await result.json();
-          document.getElementById('output').textContent = `Temperature: ${data.temperature}°C\nSky: ${data.sky}`;
+          document.getElementById('output').textContent = `Temperature: ${data.temperature}°C\nSky: ${data.sky}\nUser: ${username}`;
         } catch (err) {
           document.getElementById('output').textContent = 'Weather error: ' + err.message;
         }

@@ -29,7 +29,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(
-                    builder.Configuration["Authentication:Jwt:Key"]!
+                    builder.Configuration.GetRequiredValue("Authentication:Jwt:Key")
                 )
             ),
             ValidateLifetime = true,
@@ -69,7 +69,7 @@ app.MapPost("/login-by-code", async ([FromServices] JwtTokenBuilder tokenBuilder
     List<Claim> claims = [];
     if (!string.IsNullOrEmpty(username))
     {
-        claims.Add(new Claim(ClaimTypes.Name, username));
+        claims.Add(new Claim(nameof(username), username));
     }
 
     string token = tokenBuilder.Build(claims);
