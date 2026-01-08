@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login - Keycloak Flow Demo</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      #output { background: #f4f4f4; padding: 10px; border-radius: 5px; margin-top: 20px; }
+      button { padding: 10px 20px; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <h1>Login With Keycloak</h1>
+    <button onclick="redirectToLogin()">Login</button>
+    <pre id="output">Press "Login" to authenticate</pre>
+
+    <script>
+      const keycloakUrl = 'http://localhost:8080/realms/dev';
+      const clientId = 'weather-api';
+      const redirectUri = window.location.origin + '/login.html';
+
+      // Check if already logged in
+      const accessToken = localStorage.getItem('accessToken');
+      if (accessToken) {
+        window.location.href = '/weather.html';
+      }
+
+      // Handle redirect from Keycloak
+      window.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+
+        if (code) {
+          await loginByCode(code);
+
+          window.location.href = '/weather.html';
+        }
+      });
+
+      async function loginByCode(code) {
+        try {
+          document.getElementById('output').textContent = 'Logging in...';
+          /*
+          * The reason for providing the redirectUri in the body: The redirectUri
+          * information is required when sending a token request. If it does not
+          * match the redirectUri information when the code is received, it is not
+          * provided.
+          */
+          const result = await fetch(`/api/auth/login-by-code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, redirectUri })
+          });
+
+          if (!result.ok) {
+            throw new Error("Login failed");
+          }
+
+          const data = await result.json();
+          localStorage.setItem('accessToken', data.accessToken);
+
+          window.location.href = '/weather.html';
+        } catch (err) {
+          document.getElementById('output').textContent = 'Login error: ' + err.message;
+        }
+      }
+
+      function redirectToLogin() {
+        // This query parameters are required
+        const authUrl =
+          `${keycloakUrl}/protocol/openid-connect/auth` +
+          `?client_id=${clientId}` +
+          `&response_type=code` +
+          `&scope=openid` +
+          `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
+        window.location.href = authUrl;
+      }
+    </script>
+  </body>
+</html>

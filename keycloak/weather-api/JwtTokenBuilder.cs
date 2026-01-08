@@ -3,14 +3,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace WeatherService;
+namespace WeatherApi;
 
-public class JwtTokenBuilder(IConfiguration _configuration)
+public class JwtTokenBuilder
 {
-    readonly int _defaultExpiresInMinutes = int.Parse(_configuration.GetRequiredValue("Authentication:Jwt:ExpiresInMinutes"));
-    readonly string _key = _configuration.GetRequiredValue($"Authentication:Jwt:Key");
-    readonly string _issuer = _configuration.GetRequiredValue($"Authentication:Jwt:Issuer");
-    readonly string _audience = _configuration.GetRequiredValue($"Authentication:Jwt:Audience");
+    readonly int _defaultExpiresInMinutes = 1;
+    readonly string _key = "7F9aP2LkQxM4WJtE8RZsD0HnYcB5U3Vv";
+    readonly string _issuer = "http://localhost";
+    readonly string _audience = "weather-api";
 
     public string Build(List<Claim> claims)
     {
