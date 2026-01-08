@@ -15,8 +15,7 @@ services:
 
   keycloak:
     build:
-      context: ./keycloak
-      dockerfile: Dockerfile
+      dockerfile: keycloak/Dockerfile
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=tempadmin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=tempadminpass
@@ -30,7 +29,7 @@ services:
       postgres:
         condition: service_healthy
 
-  api:
+  weather-api:
     build:
       dockerfile: weather-api/Dockerfile
     environment:
@@ -47,4 +46,4 @@ services:
       - ./ui/index.html:/usr/share/nginx/html/index.html
       - ./ui/login.html:/usr/share/nginx/html/login.html
     depends_on:
-      - api
+      - weather-api
