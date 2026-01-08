@@ -5,77 +5,79 @@ This documentation covers using Keycloak with Docker in this repository.
 At the core of Keycloak, there are realms that represent systems at the root
 level. Under these realms, there are clients, users, and integrations.
 
-The scenario here is that the user login to the system via keycloak and get an
-`auth code` then get a token from our service to gain access to the service.
+Here, only the steps required for the user to log in, obtain an `auth code` and
+generate a token with this code are shortly documented.
 
-## Setup
+## Structure
 
-Since it is part of a system, it is removed in the same compose file as the
-project. Since it can have its own config file, Keycloak has its own folder, and
-within this folder, there is a Dockerfile and a config file.
-
-Keycloak also needs a database to work. It would be best if this database had
-its own separate database or schema.
-
-### Configuration
-
-Keycloak can be configured in four ways:
-
-1. Command-line parameters
-2. Environment variables
-3. Options in `conf/keycloak.conf` (or a user-provided config file)
-4. Sensitive options in a Java KeyStore
-
-We use the config file approach. Options follow the format
-`<key-with-dashes>=<value>`.
-
-- Default config path: `conf/keycloak.conf`
-- Environment placeholders: `${ENV_VAR}` with optional fallback
-  `${ENV_VAR:default}`
-
-All available options: [All Configs]
-
-Note: Some realm settings are restricted at runtime; enabling flags (e.g.,
-`spi-admin-allowed-system-variables`) should be used cautiously.
-
-#### Database
-
-You can configure the database via the config file, environment variables, or
-CLI flags. Precedence: CLI > environment > config file.
-
-Using `keycloak.conf`:
+We use Keycloak in our projects in the following structure:
 
 ```
-db-url-host=mykeycloakdb
+project-root/
+ ├── keycloak/
+ │   ├── Dockerfile
+ │   └── keycloak.conf
+ ├── compose.yml
+ └── ...
 ```
 
-#### Quarkus framework
+### Compose setup
 
-For gaps in Keycloak options, you can fall back to raw Quarkus properties:
-[Quarkus Properties]
+The following structure can be followed for a simple setup with a compose file.
 
-### One time import realms
+```yml
+services:
+  db:
+    image: db.image
+    environment:
+      DB: db
+      USER: db.user
+      ...
+    ...
 
-Keycloak creates a `master` realm by default; avoid using it for applications.
+  keycloak:
+    build:
+      dockerfile: keycloak/Dockerfile
+    environment:
+      - KC_DB_URL_DATABASE=db
+      - KC_DB_USERNAME=db.user
+      ...
+    ...
+```
+
+Configurations provided for configuring Keycloak can be specified in the
+environment as shown above, or they can also be provided in a `.conf` file in
+the format `<key-with-dashes>=<value>`.
+
+For a detailed example, see `compose.yml`.
+
+For more information on configuration options and setup, see [All Configs].
+
+### Dockerfile
+
+In the Dockerfile, we only pull the image, copy the `.conf` file and realm files
+to their directories, and run it with kc.sh start.
+
+Important points:
+
+- `start` runs in production mode, `start-dev` runs in development mode
+- Additional configurations can be provided while running. The priority order in
+  the configurations is `cli>env>conf`.
+- Production requires additional setup:
+  - HTTP disabled; HTTPS (TLS) required
+  - Hostname configuration required
+  - HTTPS/TLS configuration required
+
+See [Dockerfile](keycloak/Dockerfile) for an example.
+
+#### One time import realms
+
 You can create realms via the UI or Admin API, or import a prebuilt JSON by
 copying it into the image under `/opt/keycloak/data/import/` and starting with
 realm import enabled.
 
 This import works only if the realms not exist. It cannot be used for data
 updates.
-
-## Modes
-
-Keycloak runs in development (default) and production modes. Some features
-differ: [Dev Mode]
-
-### Production mode
-
-Production requires additional setup:
-
-- HTTP disabled; HTTPS (TLS) required
-- Hostname configuration required
-- HTTPS/TLS configuration required
 
 ## Optimizations
 
@@ -87,17 +89,58 @@ For faster startup in containers, use the recommended flow:
 If runtime build config conflicts with a pre-build, the pre-built assets take
 precedence.
 
-## UI
+## Keycloak Administration
 
-Access the Admin Console at `{base-url}/admin` to manage realms, users, and
-settings.
+Keycloak creates a realm named `master` by default in first start. An admin
+login is required to perform operations in this master realm. We provide these
+user credentials via the environment as `KC_BOOTSTRAP_ADMIN_USERNAME` and
+`KC_BOOTSTRAP_ADMIN_PASSWORD`. This user is opened as a temporary user. It is
+not recommended to continue using this user.
 
-## Realms
+### Realms
 
-Realms isolate users and configuration. The `master` realm exists by default and
-should be used only for administering Keycloak.
+Realms isolate users and configuration. The master realm is designated as the
+administrator realm. If a client and a regular user are to be added, a separate
+realm must be created.
+
+To create a new realm,
+
+1. login using the admin user under the master realm (assuming it is newly
+  created, this will be the one you created with `KC_BOOTSTRAP_ADMIN_X`).
+1. You can create a new realm by simply entering a `name` and selecting `enable`
+  on the manage realm page, accessible from the side menu.
+
+### Clients
+
+After creating a realm, I assume you automatically enter that realm. At this
+point, clients will be created within whichever realm you are currently in.
+
+To create a client:
+
+1. Open the new client creation screen from the Clients tab in the side menu
+1. Enter a `Client ID` and ensure that the `Client Protocol` is set to
+  `openid-connect`. Then click next
+1. Make sure `client authentication` is enabled, then you can click next.
+1. After entering the `Root URL`, please enter `Valid redirect URIs`,
+  considering the possible redirect URLs as well. It is important to note that
+  after the root URL is provided, it is added to the beginning of the redirect
+  URL. If the redirect URL provided for the auth code is not within the valid
+  scope, it is blocked
+1. Now you can save it
+
+When API requests are sent through this client, the `client_secret` must be
+provided. You can find this secret information in the credentials section of the
+Clients page.
+
+### Users
+
+User creation can also be easily done by going to their own page. However, the
+user's password is set by going to the user's page after the user is created and
+doing it from the `Credentials` tab.
 
 ## Login Flows
+
+### User Login
 
 The user's authentication screen will be explained below.
 
@@ -119,6 +162,8 @@ redirection process.
 After the Keycloak login process, it could have redirected directly to the token
 instead of the auth code. However, since it sends this token in the query, it is
 not secure. Obtaining a one-time code would be the most logical approach.
+
+### Getting Token
 
 After the code is obtained, a token will be required for other operations. To
 obtain this token, we send a request to
@@ -146,8 +191,4 @@ and create our own token.
 
 ## References
 
-[All Configs]: https://www.keycloak.org/server/all-config?f=build
-[Quarkus Properties]: https://www.keycloak.org/server/configuration#_format_for_raw_quarkus_properties
-[Dev Mode]: https://www.keycloak.org/server/configuration#_starting_keycloak_in_development_mode
-[API Reference]: https://www.keycloak.org/docs-api/latest/rest-api/index.html
-[OIDC Discovery]: http://localhost:8080/realms/master/.well-known/openid-configuration
+[All Configs]: https://www.keycloak.org/server/all-config

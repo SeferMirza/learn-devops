@@ -19,7 +19,7 @@ can pass commands as arguments.
 
 `docker run {image-name} args`
 
-## Persisting Data 
+## Persisting Data
 
 To bind a host directory to container, use `docker run` with
 `-v {absolutepath}:{containerpath}`.
@@ -43,5 +43,5 @@ To reach your machine's localhost from the container, when giving the url use
 
 Dockerfile at the root of this repository wraps
 [web-ping](https://github.com/SeriaWei/Ping). You can create a docker
-image from this dockerfile and use this cli in your container by passing 
+image from this dockerfile and use this cli in your container by passing
 `web-ping Web.Ping --host https://github.com/` command as argument.
