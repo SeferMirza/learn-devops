@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 
 namespace WeatherApi.Controllers;
 
 [ApiController]
 [Route("auth")]
-public class AuthController(JwtTokenBuilder _tokenBuilder, HttpClient _httpClient) : ControllerBase
+public class AuthController(HttpClient _httpClient) : ControllerBase
 {
     [HttpPost("login-by-code")]
     [AllowAnonymous]
@@ -41,7 +43,7 @@ public class AuthController(JwtTokenBuilder _tokenBuilder, HttpClient _httpClien
             claims.Add(new Claim(nameof(username), username.Value));
         }
 
-        return Ok(new { accessToken = _tokenBuilder.Build(claims) });
+        return Ok(new { accessToken = CreateToken(claims) });
     }
 
     public record LoginRequestBody(string Code, string RedirectUri);
@@ -52,5 +54,26 @@ public class AuthController(JwtTokenBuilder _tokenBuilder, HttpClient _httpClien
         var jwt = handler.ReadJwtToken(token);
         return jwt.Claims.FirstOrDefault(c => c.Type == "username" || c.Type == "preferred_username")
             ?? throw new Exception("Username claim not found");
+    }
+
+    string CreateToken(List<Claim> claims)
+    {
+        const int _defaultExpiresInMinutes = 1;
+        const string _key = "7F9aP2LkQxM4WJtE8RZsD0HnYcB5U3Vv";
+        const string _issuer = "http://localhost";
+        const string _audience = "weather-api";
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: _issuer,
+            audience: _audience,
+            claims: claims,
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddMinutes(_defaultExpiresInMinutes),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
