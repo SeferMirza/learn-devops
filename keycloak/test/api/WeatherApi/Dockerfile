@@ -7,11 +7,11 @@ ENV ASPNETCORE_URLS=http://+:80
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS publish
 
-COPY --parents weather-api/WeatherApi.csproj .
-RUN dotnet restore weather-api/WeatherApi.csproj
+COPY --parents test/api/WeatherApi/WeatherApi.csproj .
+RUN dotnet restore test/api/WeatherApi/WeatherApi.csproj
 
 COPY . .
-RUN dotnet publish weather-api/WeatherApi.csproj -c Release -o /app/publish
+RUN dotnet publish test/api/WeatherApi/WeatherApi.csproj -c Release -o /app/publish
 FROM base AS final
 
 WORKDIR /app

@@ -2,82 +2,49 @@
 
 This documentation covers using Keycloak with Docker in this repository.
 
-At the core of Keycloak, there are realms that represent systems at the root
-level. Under these realms, there are clients, users, and integrations.
+This project only contains a sample ui and api that uses keycloak for
+authentication.
 
-Here, only the steps required for the user to log in, obtain an `auth code` and
-generate a token with this code are shortly documented.
+```mermaid
+sequenceDiagram
+    participant UI
+    participant API
+    participant KC as Keycloak
 
-## Structure
+    UI->>KC: Login
+    KC-->>UI: Login flow completed (auth code)
 
-We use Keycloak in our projects in the following structure:
+    UI->>API: Login by code
+    API->>KC: Request token using code
+    KC-->>API: Token created
 
-```
-project-root/
- ├── keycloak/
- │   ├── Dockerfile
- │   └── keycloak.conf
- ├── compose.yml
- └── ...
-```
+    API->>API: Read username claim
+    API->>API: Create API token
+    API-->>UI: Return access token
 
-### Compose setup
-
-The following structure can be followed for a simple setup with a compose file.
-
-```yml
-services:
-  db:
-    image: db.image
-    environment:
-      DB: db
-      USER: db.user
-      ...
-    ...
-
-  keycloak:
-    build:
-      dockerfile: keycloak/Dockerfile
-    environment:
-      - KC_DB_URL_DATABASE=db
-      - KC_DB_USERNAME=db.user
-      ...
-    ...
+    UI->>UI: Write access token to localStorage
+    UI->>UI: Redirect to index
 ```
 
 Configurations provided for configuring Keycloak can be specified in the
-environment as shown above, or they can also be provided in a `.conf` file in
-the format `<key-with-dashes>=<value>`.
+environment, or they can also be provided in a `.conf` file in the format
+`<key-with-dashes>=<value>`.
 
 For a detailed example, see `compose.yml`.
 
 For more information on configuration options and setup, see [All Configs].
 
-### Dockerfile
+> [!NOTE]
+>
+> `start` runs in production mode, `start-dev` runs in development mode
 
-In the Dockerfile, we only pull the image, copy the `.conf` file and realm files
-to their directories, and run it with kc.sh start.
-
-Important points:
-
-- `start` runs in production mode, `start-dev` runs in development mode
-- Additional configurations can be provided while running. The priority order in
-  the configurations is `cli>env>conf`.
-- Production requires additional setup:
-  - HTTP disabled; HTTPS (TLS) required
-  - Hostname configuration required
-  - HTTPS/TLS configuration required
-
-See [Dockerfile](keycloak/Dockerfile) for an example.
-
-#### One time import realms
-
-You can create realms via the UI or Admin API, or import a prebuilt JSON by
-copying it into the image under `/opt/keycloak/data/import/` and starting with
-realm import enabled.
-
-This import works only if the realms not exist. It cannot be used for data
-updates.
+> [!WARNING]
+>
+> Production requires additional setup:
+>
+> - Don't expose HTTP port (8080) in compose file
+> - Hostname configuration is required
+> - HTTPS/TLS configuration is required
 
 ## Optimizations
 
@@ -97,6 +64,11 @@ user credentials via the environment as `KC_BOOTSTRAP_ADMIN_USERNAME` and
 `KC_BOOTSTRAP_ADMIN_PASSWORD`. This user is opened as a temporary user. It is
 not recommended to continue using this user.
 
+> [!TIP]
+>
+> To manage keycloak, you can use cli script `kcadm.sh` in a separate docker
+> service from a shell script such as `init.sh`
+
 ### Realms
 
 Realms isolate users and configuration. The master realm is designated as the
@@ -112,8 +84,8 @@ To create a new realm,
 
 ### Clients
 
-After creating a realm, I assume you automatically enter that realm. At this
-point, clients will be created within whichever realm you are currently in.
+After creating a realm, you automatically navigate to that realm. At this point,
+clients will be created within whichever realm you are currently in.
 
 To create a client:
 
@@ -137,58 +109,5 @@ Clients page.
 User creation can also be easily done by going to their own page. However, the
 user's password is set by going to the user's page after the user is created and
 doing it from the `Credentials` tab.
-
-## Login Flows
-
-### User Login
-
-The user's authentication screen will be explained below.
-
-The user is redirected to
-`http://keycloak/realms/<realm-name>/protocol/openid-connect/auth` to log in.
-This process requires the query parameters provided below with their
-descriptions.
-
-Query parameters:
-- `client_id`: The client ID (e.g. weather-api)
-- `response_type`: `code` (for Authorization Code Flow)
-- `scope`: `openid` (and any additional scopes)
-- `redirect_uri`: Where the user will be redirected after login
-
-After the user login, they are redirected to the `redirect_uri` URL we provided.
-Keycloak sends the state and auth code information in the query during this
-redirection process.
-
-After the Keycloak login process, it could have redirected directly to the token
-instead of the auth code. However, since it sends this token in the query, it is
-not secure. Obtaining a one-time code would be the most logical approach.
-
-### Getting Token
-
-After the code is obtained, a token will be required for other operations. To
-obtain this token, we send a request to
-`http://keycloak/realms/<realm-name>/protocol/openid-connect/token`. The
-required body parameters for this request are listed below.
-
-```
-Content-Type: application/x-www-form-urlencoded
-
-client_id=weather-api
-grant_type=authorizationCode
-code=authCode
-client_secret=clientSecret
-redirect_uri=redirectUri
-```
-
-The important thing here is that the parameters used when obtaining the code
-must be the same as those used when obtaining the token. For example,
-`redirect_uri`
-
-Since we use our own tokens in our projects, we pull the code received by the
-user into our service and go to Keycloak with the service to obtain a token. We
-retrieve the user information within this token, assign it to our own claims,
-and create our own token.
-
-## References
 
 [All Configs]: https://www.keycloak.org/server/all-config

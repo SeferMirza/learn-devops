@@ -15,7 +15,7 @@ services:
 
   keycloak:
     build:
-      dockerfile: keycloak/Dockerfile
+      dockerfile: src/keycloak/Dockerfile
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=tempadmin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=tempadminpass
@@ -31,7 +31,7 @@ services:
 
   weather-api:
     build:
-      dockerfile: weather-api/Dockerfile
+      dockerfile: test/api/WeatherApi/Dockerfile
     environment:
       - CLIENT_SECRET
     depends_on:
@@ -42,8 +42,8 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./ui/nginx.conf:/etc/nginx/nginx.conf
-      - ./ui/index.html:/usr/share/nginx/html/index.html
-      - ./ui/login.html:/usr/share/nginx/html/login.html
+      - ./test/ui/nginx.conf:/etc/nginx/nginx.conf
+      - ./test/ui/index.html:/usr/share/nginx/html/index.html
+      - ./test/ui/login.html:/usr/share/nginx/html/login.html
     depends_on:
       - weather-api
