@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Weather - Keycloak Flow Demo</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      #output { background: #f4f4f4; padding: 10px; border-radius: 5px; margin-top: 20px; }
+      button { padding: 10px 20px; cursor: pointer; margin-right: 10px; }
+    </style>
+  </head>
+  <body>
+    <h1>Weather Information</h1>
+    <div>
+      <button onclick="getWeatherInfo()">Get Weather</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+    <pre id="output">Click "Get Weather" to fetch weather information</pre>
+
+    <script>
+      // Check if logged in
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
+        window.location.href = '/login.html';
+      }
+
+      async function getWeatherInfo() {
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        try {
+          document.getElementById('output').textContent = 'Loading weather...';
+
+          const result = await fetch(`/api/forecast/weather`, {
+            headers: {
+              Authorization: 'Bearer ' + accessToken
+            }
+          });
+
+          if (result.status === 401) {
+            localStorage.removeItem('accessToken');
+            window.location.href = '/login.html';
+            return;
+          }
+
+          const data = await result.text();
+          document.getElementById('output').textContent = `Weather: ${data}`;
+        } catch (err) {
+          document.getElementById('output').textContent = 'Weather error: ' + err.message;
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem('accessToken');
+        window.location.href = '/login.html';
+      }
+    </script>
+  </body>
+</html>
