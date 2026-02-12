@@ -1,17 +1,25 @@
 ﻿using Confluent.Kafka;
 
-var consumerBuilder = new ConsumerBuilder<string, string>(new ConsumerConfig
+var config = new ConsumerConfig
 {
     BootstrapServers = "localhost:9092",
     GroupId = "1",
     AutoOffsetReset = AutoOffsetReset.Earliest
-});
+};
+var consumerBuilder = new ConsumerBuilder<string, string>(config);
+var consumerWithNoCommitBuilder = new ConsumerBuilder<string, string>(new ConsumerConfig(config) { EnableAutoCommit = false });
 
-var consumers = Enumerable.Repeat(0, 3).Select((_, index) => Execute(consumerBuilder, index));
+Task[] consumers = [
+    Consume(consumerBuilder, 0),
+    Consume(consumerWithNoCommitBuilder, 1, manualCommit: true),
+    Consume(consumerWithNoCommitBuilder, 2)
+];
 
 await Task.WhenAll(consumers);
 
-Task Execute(ConsumerBuilder<string, string> builder, int consumerId) =>
+Task Consume(ConsumerBuilder<string, string> builder, int consumerId,
+    bool manualCommit = false
+) =>
     Task.Run(() =>
     {
         using var consumer = builder.Build();
@@ -22,10 +30,17 @@ Task Execute(ConsumerBuilder<string, string> builder, int consumerId) =>
             var result = consumer.Consume(TimeSpan.FromSeconds(5));
             if (result == null) continue;
 
-            Console.Write($"Consumer: {consumerId},");
-            Console.Write($"Partition: {result.Partition.Value},");
-            Console.Write($"Offset: {result.Offset},");
-            Console.Write($"Key: {result.Message.Key},");
-            Console.WriteLine($"Value: {result.Message.Value}");
+            Console.WriteLine(
+                $"Consumer: {consumerId}," +
+                $"Partition: {result.Partition.Value}," +
+                $"Offset: {result.Offset}," +
+                $"Key: {result.Message.Key}," +
+                $"Value: {result.Message.Value}"
+            );
+
+            if (manualCommit)
+            {
+                consumer.Commit(result);
+            }
         }
     });

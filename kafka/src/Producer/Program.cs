@@ -6,32 +6,40 @@ var producerBuilder = new ProducerBuilder<string, string>(new ProducerConfig()
     Acks = Acks.All,
 });
 
-var producer = producerBuilder.Build();
+using var producer = producerBuilder.Build();
 
-while (true)
-{
-    try
+Task[] producers = [
+    Produce(),
+    Produce(key: "1234")
+];
+
+await Task.WhenAll(producers);
+
+Task Produce(
+    string? key = default
+) => Task.Run(async () =>
     {
-        var result = await producer.ProduceAsync("demo-topic" , new Message<string, string>
+        while (true)
         {
-            Key = $"#{DateTime.Now:yyyyMMddhhmmss}",
-            Value = "Message"
-        });
-        Console.WriteLine($"Key:{result.Message.Key}, Value: {result.Message.Value}, Offset: {result.Offset}");
+            try
+            {
+                var result = await producer.ProduceAsync("demo-topic", new Message<string, string>
+                {
+                    Key = key ?? $"#{DateTime.Now:ddhhmmss}",
+                    Value = "Message"
+                });
+                Console.WriteLine(
+                    $"Partition: {result.Partition.Value}," +
+                    $"Offset: {result.Offset}," +
+                    $"Key: {result.Message.Key}," +
+                    $"Value: {result.Message.Value}"
+                );
 
-        await Task.Delay(500);
-
-        result = await producer.ProduceAsync("demo-topic", new Message<string, string>
-        {
-            Key = "1234",
-            Value = $"Message"
-        });
-        Console.WriteLine($"Key:{result.Message.Key}, Value: {result.Message.Value}, Offset: {result.Offset}");
-
-        await Task.Delay(500);
-    }
-    catch (Exception e)
-    {
-        Console.WriteLine(e.Message);
-    }
-}
+                await Task.Delay(2000);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+    });
