@@ -1,22 +1,31 @@
 ﻿using Confluent.Kafka;
 
-using var consumer = new ConsumerBuilder<string, string>(new ConsumerConfig
+var consumerBuilder = new ConsumerBuilder<string, string>(new ConsumerConfig
 {
     BootstrapServers = "localhost:9092",
     GroupId = "1",
     AutoOffsetReset = AutoOffsetReset.Earliest
-}).Build();
+});
 
-consumer.Subscribe("demo-topic");
+var consumers = Enumerable.Repeat(0, 3).Select((_, index) => Execute(consumerBuilder, index));
 
-while (true)
-{
-    var result = consumer.Consume(TimeSpan.FromSeconds(5));
-    if (result == null)
+await Task.WhenAll(consumers);
+
+Task Execute(ConsumerBuilder<string, string> builder, int consumerId) =>
+    Task.Run(() =>
     {
-        Console.WriteLine("Awaiting Message");
-        continue;
-    }
+        using var consumer = builder.Build();
+        consumer.Subscribe("demo-topic");
 
-    Console.WriteLine($"Key: {result.Message.Key}, Value: {result.Message.Value}, Offset: {result.Offset}");
-}
+        while (true)
+        {
+            var result = consumer.Consume(TimeSpan.FromSeconds(5));
+            if (result == null) continue;
+
+            Console.Write($"Consumer: {consumerId},");
+            Console.Write($"Partition: {result.Partition.Value},");
+            Console.Write($"Offset: {result.Offset},");
+            Console.Write($"Key: {result.Message.Key},");
+            Console.WriteLine($"Value: {result.Message.Value}");
+        }
+    });
