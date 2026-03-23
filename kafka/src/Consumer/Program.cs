@@ -1,4 +1,6 @@
-﻿using Consumer;
+﻿// Uncomment to use specific consumer setup
+
+using Consumer;
 
 //var multipleConsumers = new MultipleConsumers();
 //await multipleConsumers.RunAsync();
