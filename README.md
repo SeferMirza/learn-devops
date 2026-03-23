@@ -11,3 +11,4 @@ examples.
 - [Docker](docker/README.md): Docker images, Dockerfiles, and container basics
 - [Keycloak](keycloak/README.md): Identity management, JWT authentication,
   Docker Compose setup
+- [Kafka](kafka/README.md): Producer, Consumer, Docker Compose setup  

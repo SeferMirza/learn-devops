@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/Consumer/Consumer.csproj" Id="14e3fc49-7c8e-4aaa-8e65-911a4d261fd9" />
+  <Project Path="src/Producer/Producer.csproj" Id="d4876fc2-e56f-4c2b-89bb-0906f5d57fdb" />
+  <Project Path="src/ProducerApi/ProducerApi.csproj" Id="ff05f985-2b2f-4277-bdc4-2e859f5b4074" />
+</Solution>
