@@ -18,11 +18,11 @@ implementations.
 - Run compose file to start a working `Kafka` server
 - Create a topic using following command
   ```cmd
-  docker exec -it <container-name> \
+  docker exec -it kafka \
     /opt/kafka/bin/kafka-topics.sh \
     --create \
     --if-not-exists \
-    --topic <topic-name> \
+    --topic demo-topic \
     --bootstrap-server localhost:9092 \
     --partitions 3 \
     --replication-factor 1
