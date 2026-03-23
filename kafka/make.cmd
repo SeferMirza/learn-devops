@@ -29,7 +29,7 @@ if /i "%APP%"=="3" goto producer-api
 if /i "%APP%"=="4" goto consumer
 
 :server
-docker compose up --build
+docker compose -p learn-devops up --build
 goto end
 
 :producer
