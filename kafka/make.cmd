@@ -10,7 +10,6 @@ if "%1"=="" (
 )
 
 set CMD=%1
-set SUBCMD=%2
 
 if /i "%CMD%"=="run" goto run
 
@@ -30,7 +29,7 @@ if /i "%APP%"=="3" goto producer-api
 if /i "%APP%"=="4" goto consumer
 
 :server
-docker compose up --build %2
+docker compose up --build
 goto end
 
 :producer

@@ -17,16 +17,16 @@ implementations.
 
 - Run compose file to start a working `Kafka` server
 - Create a topic using following command
-```cmd
-docker exec -it <container-name> \
-  /opt/kafka/bin/kafka-topics.sh \
-  --create \
-  --if-not-exists \
-  --topic <topic-name> \
-  --bootstrap-server localhost:9092 \
-  --partitions 3 \
-  --replication-factor 1
-```
+  ```cmd
+  docker exec -it <container-name> \
+    /opt/kafka/bin/kafka-topics.sh \
+    --create \
+    --if-not-exists \
+    --topic <topic-name> \
+    --bootstrap-server localhost:9092 \
+    --partitions 3 \
+    --replication-factor 1
+  ```
 - Start `Producer` app to send messages
 - Start `Consumer` app to receive messages
 
