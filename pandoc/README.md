@@ -16,7 +16,7 @@ template support. For more information, view [Typst](https://typst.app).
 ### Pandoc
 
 Pandoc can be installed on Windows, macOS, and Linux using official installers 
-or package managers. For more information, view 
+or package managers. c 
 [Pandoc Installation Guide](https://pandoc.org/installing.html)
 
 After Pandoc installation is complete verify:
@@ -131,6 +131,30 @@ pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst
 
 ### Typst
 
+Typst is a markup-based typesetting system used to write documents. It can also 
+be used as a pdf engine for Pandoc.
 
-#### Template
+For more information, view [Typst Documentation](https://typst.app/docs/)
 
+#### Styling
+
+Typst supports template files, which allow you to predefine layout, styling, and 
+structure and reuse them across multiple documents. It uses `#set` rule for 
+document settings and `#show` rule for modifying how elements are rendered.
+
+```typst
+#show table.cell.where(y: 0): set text(weight: "medium")
+
+#set table(
+  stroke: 0.5pt + black
+)
+```
+
+For more information, view 
+[Typst Style Documentation](https://typst.app/docs/reference/styling/)
+
+Below command will use template file when generating output pdf:
+
+```bash
+pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst --template=template.typ
+```
