@@ -73,9 +73,64 @@ pandoc input.md -t typst -o output.typ
 typst compile output.typ output.pdf
 ```
 
+### Attributes
+
+Attributes can be attached to block and inline elements. Pandoc includes these
+attributes in its output for Typst to use them during document generation.
+
+The general pattern for passing an attribute is:
+
+```md
+{typst:attribute="value"}
+```
+
+#### Block-level Attributes
+
+```md
+::: {typst:text:size="20px"}
+Font size of 20
+:::
+```
+
+```haskell
+[ Div ("",[],[("typst:text:size","20px")])
+    [ Para
+        [ Str "Font"
+        , Space
+        , Str "size"
+        , Space
+        , Str "of"
+        , Space
+        , Str "20"
+        ]
+    ]
+]
+```
+
+#### Inline Attributes
+
+```md
+[Confidential]{typst:text-fill="red"}
+```
+
+```haskell
+Span ("",[],[("typst:text-fill","red")])
+  [ Str "Confidential" ]
+```
+
+### Filters
+
+Pandoc includes built-in Lua filters which are tools for modifying a document’s 
+structure during conversion.
+
+For more information, visit: https://pandoc.org/filters.html
+
+```bash
+pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst
+```
+
 ### Typst
 
 
 #### Template
 
-#### Filters

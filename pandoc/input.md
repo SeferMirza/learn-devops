@@ -1,10 +1,16 @@
+---
+title: "Title"
+mainfont: "Times New Roman"
+---
+
 # Markdown Sample Document
 
-## Paragraph
-
-This is a simple paragraph explaining the purpose of the document. This is a 
+## Paragraph 
+::: {typst:text:style=\"italic\"}
+This is a [simple]{typst:text:fill="rgb(\"ff0000\")"} paragraph explaining the purpose of the document. This is a 
 simple paragraph explaining the purpose of the document. This is a simple 
 paragraph explaining the purpose of the document.
+:::
 
 ## Features
 
