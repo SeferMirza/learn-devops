@@ -6,7 +6,7 @@
       grid(
         columns: (2fr, 1fr),
         align: (left, right),
-        [ #image("logo-full-secondary-150px.png", height: 5mm) ],
+        [ #image("./assets/logo-full-secondary-150px.png", height: 5mm) ],
         [ #datetime.today().display("[year]-[month]-[day]") ]
       )
     )
@@ -18,7 +18,7 @@
       grid(
         columns: (1fr, 1fr, 1fr),
         align: (left, center, right),
-        [ #image("logo-full-secondary-150px.png", height: 2mm) ],
+        [ #image("./assets/logo-full-secondary-150px.png", height: 2mm) ],
         [ Page #counter(page).display() ],
         [ Mouseless]
       )

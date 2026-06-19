@@ -48,8 +48,8 @@ or Word.
 Use the following command to view the native AST representation of your `.md` 
 file:
 
-```bash
-pandoc -f markdown -t native input.md
+```powershell
+pandoc -f markdown -t native .\assets\input.md
 ```
 
 ## Generating `.pdf` files
@@ -60,17 +60,16 @@ is used for its simplicity and easy setup.
 
 The command below generates a PDF directly from the `input.md` file:
 
-```bash
-# single line (direct PDF generation)
-pandoc input.md -o output.pdf --pdf-engine=typst
+```powershell
+pandoc .\assets\input.md -o .\output\output.pdf --pdf-engine=typst
 ```
 
 It is also possible to  generate an intermediate `.typ` file and compile 
 it manually:
 
-```bash
-pandoc input.md -t typst -o output.typ
-typst compile output.typ output.pdf
+```powershell
+pandoc .\assets\input.md -t typst -o .\output\output.typ
+typst compile .\output\output.typ .\output\output.pdf
 ```
 
 ### Filters
@@ -81,10 +80,10 @@ files for `.pdf` generation.
 
 For more information, visit: https://pandoc.org/filters.html
 
-```bash
-pandoc input.md --lua-filter=table-filter.lua -t native
+```powershell
+pandoc .\assets\input.md --lua-filter=.\assets\table-filter.lua -t native
 
-pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst
+pandoc .\assets\input.md -o .\output\output.pdf --lua-filter=.\assets\table-filter.lua --pdf-engine=typst
 ```
 
 ## Typst
@@ -158,8 +157,13 @@ For more information, view
 
 Below command will use template file when generating output pdf:
 
-```bash
-pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst --template=template.typ
+```powershell
+pandoc `
+  .\assets\input.md `
+  -o .\output\output.pdf `
+  --lua-filter=.\assets\table-filter.lua `
+  --pdf-engine=typst `
+  --template=.\assets\template.typ
 ```
 
 ### Raw Typst Blocks

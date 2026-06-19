@@ -3,6 +3,3 @@ obj/
 .vs/
 **/*.csproj.user
 .env
-**/output.md
-**/output.typ
-**/*.pdf
