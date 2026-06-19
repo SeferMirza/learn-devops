@@ -37,6 +37,19 @@ After typst setup is complete verify:
 typst --version
 ```
 
+### Sample Project
+
+This project also includes a Docker setup which allows running full pipeline 
+without installing dependencies. A single `app.cs` file is run in the container, 
+which starts a process that uses contens of `.\assets` folder and outputs a 
+`.pdf` file to the `.\outputs` folder using `Pandoc` and `Typst`
+
+Run following command to create a pdf file from `.\assets\input.md`:
+
+```powershell
+docker-compose up
+```
+
 ## Parsing `.md` files
 
 Pandoc parses `.md` files by first converting them into an abstract syntax tree 
