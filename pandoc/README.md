@@ -16,7 +16,7 @@ template support. For more information, view [Typst](https://typst.app).
 ### Pandoc
 
 Pandoc can be installed on Windows, macOS, and Linux using official installers 
-or package managers. c 
+or package managers.
 [Pandoc Installation Guide](https://pandoc.org/installing.html)
 
 After Pandoc installation is complete verify:
@@ -42,7 +42,7 @@ typst --version
 This project also includes a Docker setup which allows running full pipeline 
 without installing dependencies. A single `app.cs` file is run in the container, 
 which starts a process that uses contens of `.\assets` folder and outputs a 
-`.pdf` file to the `.\outputs` folder using `Pandoc` and `Typst`
+`.pdf` file to the `.\outputs` folder using `Pandoc` and `Typst`.
 
 Run following command to create a pdf file from `.\assets\input.md`:
 
@@ -94,9 +94,16 @@ files for `.pdf` generation.
 For more information, visit: https://pandoc.org/filters.html
 
 ```powershell
-pandoc .\assets\input.md --lua-filter=.\assets\table-filter.lua -t native
+pandoc `
+  .\assets\input.md `
+  --lua-filter=.\assets\table-filter.lua `
+  -t native
 
-pandoc .\assets\input.md -o .\output\output.pdf --lua-filter=.\assets\table-filter.lua --pdf-engine=typst
+pandoc `
+  .\assets\input.md `
+  -o .\output\output.pdf `
+  --lua-filter=.\assets\table-filter.lua `
+  --pdf-engine=typst
 ```
 
 ## Typst
