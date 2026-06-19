@@ -73,6 +73,27 @@ pandoc input.md -t typst -o output.typ
 typst compile output.typ output.pdf
 ```
 
+### Filters
+
+Pandoc includes built-in Lua filters which are tools for modifying a document’s 
+structure during conversion. They can be used to modify when creating typst 
+files for `.pdf` generation.
+
+For more information, visit: https://pandoc.org/filters.html
+
+```bash
+pandoc input.md --lua-filter=table-filter.lua -t native
+
+pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst
+```
+
+## Typst
+
+Typst is a markup-based typesetting system used to write documents. It can also 
+be used as a pdf engine for Pandoc. 
+
+For more information, view [Typst Documentation](https://typst.app/docs/)
+
 ### Attributes
 
 Attributes can be attached to block and inline elements. Pandoc includes these
@@ -118,25 +139,7 @@ Span ("",[],[("typst:text-fill","red")])
   [ Str "Confidential" ]
 ```
 
-### Filters
-
-Pandoc includes built-in Lua filters which are tools for modifying a document’s 
-structure during conversion.
-
-For more information, visit: https://pandoc.org/filters.html
-
-```bash
-pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst
-```
-
-### Typst
-
-Typst is a markup-based typesetting system used to write documents. It can also 
-be used as a pdf engine for Pandoc.
-
-For more information, view [Typst Documentation](https://typst.app/docs/)
-
-#### Styling
+### Styling
 
 Typst supports template files, which allow you to predefine layout, styling, and 
 structure and reuse them across multiple documents. It uses `#set` rule for 
@@ -158,3 +161,27 @@ Below command will use template file when generating output pdf:
 ```bash
 pandoc input.md -o output.pdf --lua-filter=table-filter.lua --pdf-engine=typst --template=template.typ
 ```
+
+### Raw Typst Blocks
+
+When generating Typst output with Pandoc, you can embed native Typst code using 
+a raw Typst block.
+
+```{=typst}
+#table(
+  columns: (auto, auto, auto, auto),
+  align: (auto, auto, auto, auto),
+  stroke: 0.5pt + black,
+  
+  table.header(
+    [Header 1], [Header 2], [Header 3], [Header 4]
+  ),
+
+  [cell1,1], [cell1,2], [cell1,3], [cell1,4],
+  [cell2,1], [cell2,2], [cell2,3], [cell2,4]
+)
+```
+
+Pandoc copies the contents of the block directly into the generated `.typ` 
+file. This can be used when Pandoc typst renderer does not fully output the 
+desired markdown component
